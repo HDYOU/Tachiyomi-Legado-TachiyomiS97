@@ -28,10 +28,10 @@ cat << EOF > $tmp_file
 
 <!-- search manga chapters -->
 <string name="fetch_manga_chapters">在搜索结果显示漫画章节数</string>
-<string name="fetch_manga_chapters_summary">自动获取最新的漫画详情和章节并将其保存在数据库中\n警告：此功能将极大地影响设备性能并增加到源的网络流量</string>
+<string name="fetch_manga_chapters_summary">自动获取最新的漫画详情和章节并将其保存在数据库中\\n警告：此功能将极大地影响设备性能并增加到源的网络流量</string>
 
 <string name="force_bypass_cloudflare">尝试强制绕过cloudflare错误</string>
-<string name="force_bypass_cloudflare_summary">当应用程序试图强制绕过时，此功能可能会降低网络速度\n警告：这是一个实验性功能，仅适用于某些来源</string>
+<string name="force_bypass_cloudflare_summary">当应用程序试图强制绕过时，此功能可能会降低网络速度\\n警告：这是一个实验性功能，仅适用于某些来源</string>
 <string name="toggle_force_bypass_cloudflare">切换cloudflare旁路</string>
 EOF
 sed -i '/^$/d' $tmp_file
