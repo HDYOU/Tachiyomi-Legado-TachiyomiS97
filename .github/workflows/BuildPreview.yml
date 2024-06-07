@@ -1,0 +1,431 @@
+name: Remote Dispatch Build App
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+  watch:
+    types: [ started ]
+  push:
+    branches:
+      - master
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/BuildPreview.yml'
+
+      # only one run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true  # true false
+
+env:
+  package_name: eu.kanade.tachiyomi.sy
+  
+  # Setting an environment variable with the value of a configuration variable
+  APP_NAME: ${{ vars.APP_NAME }}
+  CLONE_REPOSITORY: ${{ vars.CLONE_REPOSITORY }}
+  API_REPO: ${{ vars.API_REPO }}
+  # MY_TOKEN: 
+  
+  CLIENT_SECRETS_TEXT: '{"installed":{"client_id":"1036781676510-5lik7v40epda8egfdtiuj48b4sgnklfr.apps.googleusercontent.com","project_id":"tachiyomisy-417415","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs"}}'
+  # GOOGLE_SERVICES_TEXT: 
+  ALIAS: 12345678
+  KEY_STORE_PASSWORD: 12345678
+  KEY_PASSWORD: 12345678
+  # SIGNING_KEY: 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
+  is_remove_r8: false  # true false
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Validate Value
+        run: |
+          # set -e
+          if [ -z "${{ env.APP_NAME }}" ]; then
+              echo "no found value: APP_NAME"
+              exit 1
+          fi
+          if [ -z "${{ env.CLONE_REPOSITORY }}" ]; then
+              echo "no found value: CLONE_REPOSITORY"
+              exit 1
+          fi
+          if [ -z "${{ env.API_REPO }}" ]; then
+              echo "no found value: API_REPO"
+              exit 1
+          fi
+          if [ -z "${{ secrets.MY_TOKEN }}" ]; then
+              echo "no found value: secrets.MY_TOKEN"
+              exit 1
+          fi
+
+      - name: Setup Android SDK
+        run: |
+          # 后台运行
+          nohup ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "build-tools;29.0.3" > ~/out.txt 2>&1 &
+
+      - name: Get Env Info
+        run: |
+          free -h
+          cat /proc/cpuinfo
+          lscpu
+
+      - name: Get Runner number
+        run: |
+          repo="${{ env.API_REPO }}"
+          # result=$(curl -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" -s https://api.github.com/repos/$repo/releases/latest )
+          result=$(curl -s https://api.github.com/repos/$repo/releases/latest )
+          #echo "$result"
+          echo $result | grep "tag_name"
+          tag_name=$(echo $result | grep "tag_name" | awk -F "tag_name" '{ print $2 }' | awk -F\" '{ print $3 }')
+          echo "tag_name: $tag_name"
+          echo "run_number=$tag_name" >> $GITHUB_ENV
+
+      - name: set val
+        run: |
+          echo GOOGLE_SERVICES_TEXT='{"project_info":{"project_number":"82031285239","project_id":"mihonapp","storage_bucket":"mihonapp.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:82031285239:android:336ed6dceef55c357594f2","android_client_info":{"package_name":"${{ env.package_name }}"}},"oauth_client":[],"api_key":[{"current_key":"AIzaSyDTvOxBQnuXADx5isKxoynPG0nlAO8bQbk"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}},{"client_info":{"mobilesdk_app_id":"1:82031285239:android:b7440cbdd0d33c9d7594f2","android_client_info":{"package_name":"${{ env.package_name }}.debug"}},"oauth_client":[],"api_key":[{"current_key":"AIzaSyDTvOxBQnuXADx5isKxoynPG0nlAO8bQbk"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' >> $GITHUB_ENV
+      - name: Clone Repository
+        uses: actions/checkout@v4
+        with:
+          repository: "${{ env.CLONE_REPOSITORY }}"
+          fetch-depth: 
+          
+      - name: Fetch Repository
+        run: |
+          nohup git fetch --tags > ~/out.txt 2>&1 &
+          nohup git log --oneline --decorate --tags --no-walk > ~/out.txt 2>&1 &
+
+      - name: Clone currnet Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: tmp_currnet_repo
+
+
+      - name: Chmod Script
+        run: |
+          chmod 777 gradlew
+          ls -l tmp_currnet_repo
+          chmod 777 tmp_currnet_repo/data/ci-sh/*.sh
+          chmod 777 tmp_currnet_repo/data/self-sh/*.sh
+               
+      
+      - name: Update Downloader Concurrency Num To 20
+        run: |
+         test -f app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt && sed -i 's/flatMapMerge(concurrency = 2)/flatMapMerge(concurrency = 20)/g' app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+         exit 0
+      - name: Update Image Downloader Thread Num To 20
+        run: |
+         # 下载线程
+         test -f app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsReaderScreen.kt && sed -i 's/List(5)/List(20)/g' app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsReaderScreen.kt
+         exit 0
+
+
+      - name: Fix PRIVATE Installer
+        run: |
+         # PRIVATE
+         test -f app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsAdvancedScreen.kt && sed -i 's/it != BasePreferences.ExtensionInstaller.PRIVATE/true/g' app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsAdvancedScreen.kt
+         exit 0
+
+      - name: Fix ExtensionLoader Of libVersion
+        run: |
+         # test -f app/src/main/java/eu/kanade/tachiyomi/extension/util/ExtensionLoader.kt && sed -i 's/ || libVersion < LIB_VERSION_MIN || libVersion > LIB_VERSION_MAX//g' app/src/main/java/eu/kanade/tachiyomi/extension/util/ExtensionLoader.kt
+         test -f app/src/main/java/eu/kanade/tachiyomi/extension/util/ExtensionLoader.kt && sed -i 's/ || libVersion < LIB_VERSION_MIN//g' app/src/main/java/eu/kanade/tachiyomi/extension/util/ExtensionLoader.kt
+         exit 0
+      
+      - name: Fix getDownloaderGroup
+        run: |
+         test -f app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsAdvancedScreen.kt && sed -i 's#// getDownloaderGroup()#getDownloaderGroup()#g' app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsAdvancedScreen.kt
+         exit 0
+
+
+      - name: Remove Firebase
+        run: |
+          # sh tmp_currnet_repo/data/ci-sh/remove-firebase.sh
+          files_list=("build.gradle.kts" "CONTRIBUTING.md" 
+              "app/src/main/java/exh/log/CrashlyticsPrinter.kt" 
+              "gradle/sy.versions.toml" 
+              "app/src/main/java/eu/kanade/tachiyomi/crash/GlobalExceptionHandler.kt" 
+              "app/build.gradle.kts" 
+              "app/src/main/java/eu/kanade/tachiyomi/App.kt" 
+              "gradle/libs.versions.toml" 
+              "app/src/main/java/eu/kanade/tachiyomi/ui/main/MainActivity.kt" 
+              "app/proguard-rules.pro" 
+              "app/src/main/java/eu/kanade/tachiyomi/ui/setting/SettingsAdvancedController.kt" 
+          )
+
+          for file_path in ${files_list[*]}; do
+              echo "file_path: $file_path"
+              test -f "$file_path" && sed -i '/firebase/d' "$file_path"
+              test -f "$file_path" && sed -i '/Firebase/d' "$file_path"
+          done
+          exit 0
+
+
+      - name: Remove Google GMS
+        run: |
+          sh tmp_currnet_repo/data/ci-sh/remove-gms.sh
+
+      - name: Clone Tachiyomi-Legado Repository
+        uses: actions/checkout@v4
+        with:
+          repository: "HDYOU/Tachiyomi-Legado"
+          fetch-depth: 1
+          token: ${{ secrets.MY_TOKEN }}
+          path: repo
+
+
+      - name: Clone Tachiyomi-Legado To Local
+        run: |
+          pwd
+          # mkdir -p ~/workdir
+          # ls -lh ~
+          # git clone https://HDYOU:${{ secrets.MY_TOKEN }}@github.com/HDYOU/Tachiyomi-Legado.git ~/workdir/repo --depth 1
+          ls -lh .
+          cp -rf repo/mangaLegado .
+          # cp -f repo/test.jks app/
+          sh tmp_currnet_repo/data/ci-sh/append-Legado-lib.sh
+
+
+      - name: Write Signing Configs
+        run: |
+          cp -f tmp_currnet_repo/12345678.jks  app/
+          sh tmp_currnet_repo/data/ci-sh/write-signing-conf.sh
+
+      - name: Set build dependences
+        run: |
+          # test -f domain/build.gradle.kts && sed -i '/implementation(libs.injekt.core)/a \    implementation("androidx.paging:paging-common-ktx:3.2.1")' domain/build.gradle.kts
+    
+          
+      - name: Remove R8
+        if: env.is_remove_r8 == 'true' && !cancelled()
+        run: |
+          test -f app/build.gradle.kts && sed -i 's/isShrinkResources = true/isShrinkResources = false/g' app/build.gradle.kts
+          test -f app/build.gradle.kts && sed -i 's/isMinifyEnabled = true/isMinifyEnabled = false/g' app/build.gradle.kts
+    
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Set up gradle
+        uses: gradle/actions/setup-gradle@v3
+          
+      # - name: Cache Gradle Dependencies
+        # uses: actions/cache@v3.3.2
+        # with:
+          # path: |
+            # ~/.gradle/caches
+            # ~/.gradle/wrapper
+            # !~/.gradle/caches/build-cache-*
+          # key: gradle-deps-core-${{ hashFiles('**/build.gradle.kts', '**/build.gradle', '**/*.versions.toml') }}
+          # restore-keys: |
+            # gradle-deps
+      
+      # - name: Cache Gradle Build
+        # uses: actions/cache@v3.2.4
+        # with:
+          # path: |
+            # ~/.gradle/caches/build-cache-*
+            # ~/.gradle/buildOutputCleanup/cache.properties
+          # key: gradle-builds-core-${{ github.sha }}
+          # restore-keys: |
+            # gradle-builds
+
+      - name: Prepare build
+        run: |
+          set -e
+
+          git fetch --tags
+
+          prev_release_sha=$(git log --oneline --decorate --tags --no-walk --pretty='%C(auto)%h' | head -n 2 | tail -1)
+          echo "PREV_RELEASE_SHA=$prev_release_sha" >> $GITHUB_ENV
+          
+          current_sha=$(git log --oneline --decorate --tags --no-walk --pretty='%C(auto)%h' | head -n 1)
+          echo "CURRENT_SHA=$current_sha" >> $GITHUB_ENV
+          
+          echo "COMMIT_LOGS<<{delimiter}
+          $(curl -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ env.CLONE_REPOSITORY }}/compare/$prev_release_sha...$current_sha" \
+            | jq '[.commits[]|{message:(.commit.message | split("\n")), username:.author.login}]' \
+            | jq -r '.[]|"- \(.message | first) (@\(.username))"')
+          {delimiter}" >> $GITHUB_ENV
+
+      - name: Set CHANGELOG
+        run: |
+          changelog="$(git log ${{ env.PREV_RELEASE_SHA }}..${{ env.CURRENT_SHA }} --pretty=format:'{{changelogtext}}%s (@%an){{!changelogtext}}')"
+          changelog="${changelog//$'%'/%25}"
+          changelog="${changelog//$'\n'/}"
+          changelog="${changelog//$'\r'/}"
+          changelog="${changelog//$'<'/}"
+          changelog="${changelog//$'>'/}"
+          changelog="${changelog//$'&'/}"
+          changelog="$(echo $changelog | sed -e 's/{{changelogtext}}/<changelogtext>/g')"
+          changelog="$(echo $changelog | sed -e 's/{{!changelogtext}}/<\/changelogtext>/g')"
+          changelog="<?xml version=\"1.0\" encoding=\"utf-8\"?><changelog bulletedList=\"true\"><changelogversion versionName=\"${{ env.run_number }}\" changeDate=\"\">$changelog</changelogversion></changelog>"
+          echo "CHANGELOG=$changelog" >> $GITHUB_ENV
+
+      - name: Write Version.kt
+        uses: DamianReeves/write-file-action@v1.3
+        with:
+          path: app/src/main/java/exh/Version.kt
+          contents: 'package exh const val syDebugVersion: String = "${{ env.run_number }}"'
+          write-mode: overwrite
+
+      - name: Write changelog_debug.xml
+        uses: DamianReeves/write-file-action@v1.3
+        with:
+          path: app/src/main/res/raw/changelog_debug.xml
+          contents: "${{ env.CHANGELOG }}"
+          write-mode: overwrite
+
+      - name: test val
+        run: |
+          echo "------start test val"
+          echo "${{ env.GOOGLE_SERVICES_TEXT }}"
+          echo "${{ env.CLIENT_SECRETS_TEXT }}"
+          echo "${{ env.SIGNING_KEY }}"
+          echo "${{ env.ALIAS }}"
+          echo "${{ env.KEY_STORE_PASSWORD }}"
+          echo "${{ env.KEY_PASSWORD }}"
+          echo "------end"
+
+      - name: Write google-services.json
+        uses: DamianReeves/write-file-action@v1.3
+        with:
+          path: app/google-services.json
+          contents: ${{ env.GOOGLE_SERVICES_TEXT }}
+          write-mode: overwrite
+
+      - name: Write client_secrets.json
+        uses: DamianReeves/write-file-action@v1.3
+        with:
+          path: app/src/main/assets/client_secrets.json
+          contents: ${{ env.CLIENT_SECRETS_TEXT }}
+          write-mode: overwrite
+
+      - name: Set Gradle Conf
+        run: |
+          mkdir -p ~/.gradle/
+          cp tmp_currnet_repo/data/conf/ci-gradle.properties ~/.gradle/gradle.properties
+
+      - name: Update Tachiyomi-Legado lib version
+        run: |
+          sh tmp_currnet_repo/data/ci-sh/replace-Legado-lib-version.sh
+
+      - name: Update AppUpdateChecker
+        shell: bash
+        run: |
+          for file_path in `find app/src -type f -name "AppUpdateChecker.kt"`; do
+              echo "find AppUpdateChecker path: $file_path"
+              sed -i s"#${{ env.API_REPO }}#${{ github.repository }}#"g   $file_path
+              sed -i s"#${{ env.CLONE_REPOSITORY }}#${{ github.repository }}#"g   $file_path
+          done
+
+      - name: Set Gradle configuration-cache
+        run: |
+          sh tmp_currnet_repo/data/ci-sh/set-gradle-configuration-cache.sh
+
+      - name: Run Self Script
+        run: |
+          sh tmp_currnet_repo/data/ci-sh/run-self-script.sh
+
+      - name: Build app
+        run: |
+          # --exclude-task :buildSrc:checkKotlinGradlePluginConfigurationErrors \
+          # --exclude-task checkKotlinGradlePluginConfigurationErrors \
+          # --exclude-task checkStandardReleaseDuplicateClasses \
+          # --exclude-task checkStandardReleaseAarMetadata  \
+          # --warning-mode all  \
+          ./gradlew assembleStandardRelease -x test  --build-cache --parallel --no-daemon
+
+      # - name: Set Sign Key
+      #   run: |
+      #     ls -lh
+      #     result=$(base64 tmp_currnet_repo/12345678.jks)
+      #     echo "SIGNING_KEY=$result" >> $GITHUB_ENV
+      
+      # - name: Sign Android Release
+      #   uses: r0adkll/sign-android-release@v1
+      #   with:
+      #     releaseDirectory: app/build/outputs/apk/standard/release
+      #     signingKeyBase64: ${{ env.SIGNING_KEY }}
+      #     alias: ${{ env.ALIAS }}
+      #     keyStorePassword: ${{ env.KEY_STORE_PASSWORD }}
+      #     keyPassword: ${{ env.KEY_PASSWORD }}
+      
+      - name: Clean up build artifacts
+        run: |
+          set -e
+
+          mv app/build/outputs/apk/standard/release/*-universal-*.apk ${{ env.APP_NAME }}-${{ env.run_number }}.apk
+          sha=`sha256sum ${{ env.APP_NAME }}-${{ env.run_number }}.apk | awk '{ print $1 }'`
+          echo "APK_UNIVERSAL_SHA=$sha" >> $GITHUB_ENV
+
+          cp app/build/outputs/apk/standard/release/*-arm64-v8a-*.apk ${{ env.APP_NAME }}-arm64-v8a-${{ env.run_number }}.apk
+          sha=`sha256sum ${{ env.APP_NAME }}-arm64-v8a-${{ env.run_number }}.apk | awk '{ print $1 }'`
+          echo "APK_ARM64_V8A_SHA=$sha" >> $GITHUB_ENV
+
+          cp app/build/outputs/apk/standard/release/*-armeabi-v7a-*.apk ${{ env.APP_NAME }}-armeabi-v7a-${{ env.run_number }}.apk
+          sha=`sha256sum ${{ env.APP_NAME }}-armeabi-v7a-${{ env.run_number }}.apk | awk '{ print $1 }'`
+          echo "APK_ARMEABI_V7A_SHA=$sha" >> $GITHUB_ENV
+
+          cp app/build/outputs/apk/standard/release/*-x86-*.apk ${{ env.APP_NAME }}-x86-${{ env.run_number }}.apk
+          sha=`sha256sum ${{ env.APP_NAME }}-x86-${{ env.run_number }}.apk | awk '{ print $1 }'`
+          echo "APK_X86_SHA=$sha" >> $GITHUB_ENV
+          
+          cp app/build/outputs/apk/standard/release/*-x86_64-*.apk ${{ env.APP_NAME }}-x86_64-${{ env.run_number }}.apk
+          sha=`sha256sum ${{ env.APP_NAME }}-x86_64-${{ env.run_number }}.apk | awk '{ print $1 }'`
+          echo "APK_X86_64_SHA=$sha" >> $GITHUB_ENV
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.run_number }}
+          name: ${{ env.APP_NAME }} Dev Build ${{ env.run_number }}
+          body: |
+            ### Commits
+
+            https://github.com/${{ env.CLONE_REPOSITORY }}/compare/${{ env.PREV_RELEASE_SHA }}...${{ env.CURRENT_SHA }}
+
+            ${{ env.COMMIT_LOGS }}
+
+            ---
+
+            ### Checksums
+
+            | Variant | SHA-256 |
+            | ------- | ------- |
+            | Universal | ${{ env.APK_UNIVERSAL_SHA }} |
+            | arm64-v8a | ${{ env.APK_ARM64_V8A_SHA }} |
+            | armeabi-v7a | ${{ env.APK_ARMEABI_V7A_SHA }} |
+            | x86 | ${{ env.APK_X86_SHA }} |
+            | x86_64 | ${{ env.APK_X86_64_SHA }} |
+          files: |
+            ${{ env.APP_NAME }}-${{ env.run_number }}.apk
+            ${{ env.APP_NAME }}-arm64-v8a-${{ env.run_number }}.apk
+            ${{ env.APP_NAME }}-armeabi-v7a-${{ env.run_number }}.apk
+            ${{ env.APP_NAME }}-x86-${{ env.run_number }}.apk
+            ${{ env.APP_NAME }}-x86_64-${{ env.run_number }}.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 3
+          keep_minimum_runs: 2

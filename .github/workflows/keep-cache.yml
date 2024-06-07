@@ -1,0 +1,44 @@
+name: evey 6 days run,keep cache
+
+on:
+  schedule:
+    - cron: '30 0 */6 * *'
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+        
+      # only one run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+    api_repo: komikku-app/komikku-preview
+
+jobs:
+  trigger_preview_build:
+    name: keep cache
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: PING - Dispatch initiating repository event
+        run: |
+          echo "${{ github.repository }}"
+          echo ""
+          curl -X POST https://api.github.com/repos/${{ github.repository }}/dispatches \
+          -H 'Accept: application/vnd.github+json' \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          --data '{"event_type": "ping build", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'
+
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 20
+          keep_minimum_runs: 2
+

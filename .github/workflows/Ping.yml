@@ -1,0 +1,54 @@
+name: Remote Dispatch Action Initiator
+ 
+on:
+    schedule:
+        - cron: '30 0,12 * * *'
+    workflow_dispatch:
+      inputs:
+        ssh:
+          description: 'SSH connection to Actions'
+          required: false
+          default: 'false'
+ 
+env:
+    api_repo: komikku-app/komikku-preview
+
+jobs:
+  trigger_preview_build:
+    name: Trigger preview build
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: PING - Dispatch initiating repository event
+        run: |
+          echo "${{ github.repository }}"
+          repo="${{ vars.API_REPO }}"
+          echo "repo: ${repo}"
+          echo ""
+          echo ""
+          result=$(curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -s https://api.github.com/repos/$repo/releases/latest )
+          #echo "$result"
+          echo $result | grep "published_at"
+          date1=$(echo $result | grep "published_at" | awk -F "published_at" '{ print $2 }' | awk -F\" '{ print $3 }')
+          echo "date: $date1"
+          sec1=$(date -d "$date1" +%s)
+          sec2=$(date --date="yesterday" +%s)
+          if [ "$sec1" -gt "$sec2" ]; then
+            curl -X POST https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            --data '{"event_type": "ping", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'
+          else
+            echo "no update"
+            echo $result
+          fi
+
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 3
+          keep_minimum_runs: 2
+          
