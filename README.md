@@ -1,7 +1,7 @@
 # TachiyomiSYPreview
 A download host for TachiyomiSY Preview builds
 
-TachiyomiSY: https://github.com/jobobby04/TachiyomiSY/
+TachiyomiSY: https://github.com/Saud-97/TachiyomiS97/
 
 ## actions variables
 - app_name: TachiyomiSY
